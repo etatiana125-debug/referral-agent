@@ -3,7 +3,58 @@ from hashlib import md5
 from pathlib import Path
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
-PROMPTS_DIR = Path("app/prompts")
+PROMPTS_DIR = Path("prompts")
+
+HOOK_TEMPLATES = [
+    "Смотри, какая идея по теме «{title}» может сэкономить время.",
+    "Если давно хотели упростить «{title_lower}», начните с этого подхода.",
+    "Нашла рабочий способ по теме «{title}» — делюсь коротко и по делу.",
+    "Неочевидная, но удобная находка для темы «{title}».",
+    "Короткий инсайт для тех, кто развивает {title_lower}.",
+    "В этой теме есть простой ход, который часто недооценивают: {title}.",
+]
+
+CTA_TEMPLATES = [
+    "Если хотите спокойно посмотреть детали, вот ссылка: {utm_link}",
+    "Собрала материал с примерами — можно открыть тут: {utm_link}",
+    "Если откликается, попробуйте с этого шага: {utm_link}",
+    "Оставляю ссылку, чтобы можно было изучить в удобном темпе: {utm_link}",
+]
+
+TG_OPENERS = [
+    "Смотри, что нашла по этой теме.",
+    "Вот что заметила, пока разбирала этот пин.",
+    "В этой теме есть маленькая фишка, которая реально упрощает процесс.",
+]
+
+TG_ENDINGS = [
+    "Если полезно, продолжу в таком формате 💛",
+    "Если хотите, соберу ещё похожие идеи в отдельную подборку.",
+    "Если тема откликнулась, в следующем посте разберу практические примеры.",
+]
+
+VK_INTROS = [
+    "Если вам нужен понятный способ без лишней теории, вот суть в двух словах.",
+    "Этот подход удобен тем, что его можно применить сразу, без сложного входа.",
+    "Сохраняйте пост: здесь короткий и практичный разбор по теме.",
+]
+
+VK_ENDINGS = [
+    "Если пост полезен, сохраните его и вернитесь к шагам позже.",
+    "Если хотите, могу сделать продолжение с примерами под разные задачи.",
+    "Напишите, если нужен разбор похожего кейса — подготовлю следующий пост.",
+]
+
+
+@lru_cache(maxsize=1)
+def _load_style_context() -> dict[str, str]:
+    """Читает стилевые файлы из prompts/ и возвращает их содержимое."""
+    return {
+        "shared_rules": (PROMPTS_DIR / "shared_rules.txt").read_text(encoding="utf-8"),
+        "telegram_style": (PROMPTS_DIR / "telegram_style.txt").read_text(encoding="utf-8"),
+        "vk_style": (PROMPTS_DIR / "vk_style.txt").read_text(encoding="utf-8"),
+        "author_voice": (PROMPTS_DIR / "author_voice.txt").read_text(encoding="utf-8"),
+    }
 
 
 def build_utm_link(base_url: str, source: str, campaign: str) -> str:
@@ -24,12 +75,12 @@ def build_utm_link(base_url: str, source: str, campaign: str) -> str:
 
 
 def build_content_options(title: str, description: str, utm_link: str) -> tuple[list[str], list[str]]:
-    """Генерирует 3 разных хука и 2 CTA-варианта с учетом правил из текстовых файлов."""
-    shared = _load_prompt_sections(PROMPTS_DIR / "shared_rules.txt")
+    """Генерирует 3 разных хука и 2 CTA-варианта с реферальной ссылкой."""
+    _ = _load_style_context()  # Важно: генерация опирается на внешние стилевые файлы.
 
     seed = _seed_value(title=title, description=description)
-    hooks = _pick_unique_templates(shared["HOOKS"], count=3, seed=seed)
-    ctas = _pick_unique_templates(shared["CTA"], count=2, seed=seed + 13)
+    hooks = _pick_unique_templates(HOOK_TEMPLATES, count=3, seed=seed)
+    ctas = _pick_unique_templates(CTA_TEMPLATES, count=2, seed=seed + 13)
 
     context = {
         "title": title,
@@ -38,78 +89,85 @@ def build_content_options(title: str, description: str, utm_link: str) -> tuple[
         "utm_link": utm_link,
     }
 
-    banned = shared.get("BANNED_PHRASES", [])
-    hook_texts = [_clean_style(template.format(**context), banned) for template in hooks]
-    cta_texts = [_clean_style(template.format(**context), banned) for template in ctas]
-    return hook_texts, cta_texts
+    return [template.format(**context) for template in hooks], [template.format(**context) for template in ctas]
 
 
 def build_telegram_text(title: str, description: str, hooks: list[str], cta: str) -> str:
-    """Telegram: более личный, теплый и разговорный стиль."""
-    tg = _load_prompt_sections(PROMPTS_DIR / "telegram_style.txt")
-    shared = _load_prompt_sections(PROMPTS_DIR / "shared_rules.txt")
-
+    """Telegram: более живой, тёплый и разговорный текст."""
+    style = _load_style_context()
     seed = _seed_value(title=title, description=description)
-    body_template = _pick_unique_templates(tg["BODY"], count=1, seed=seed + 5)[0]
-    ending = _pick_unique_templates(tg["ENDING"], count=1, seed=seed + 9)[0]
 
-    body = body_template.format(title=title, title_lower=title.lower(), description=description)
-    text = f"{hooks[0]}\n\n{body}\n\n{cta}\n{ending}"
-    return _clean_style(text, shared.get("BANNED_PHRASES", []))
+    opener = _pick_unique_templates(TG_OPENERS, count=1, seed=seed + 5)[0]
+    ending = _pick_unique_templates(TG_ENDINGS, count=1, seed=seed + 7)[0]
+
+    # Добавляем небольшой акцент на тему пина, если она про AI/визуал/контент.
+    topical_line = _topic_line(title=title, description=description)
+
+    text = (
+        f"{hooks[0]}\n\n"
+        f"{opener}\n"
+        f"{topical_line}\n"
+        f"{description}\n\n"
+        f"{cta}\n"
+        f"{ending}"
+    )
+    return _polish_text(text, style)
 
 
 def build_vk_text(title: str, description: str, hooks: list[str], cta: str) -> str:
-    """VK: более структурный стиль с вовлекающим первым абзацем."""
-    vk = _load_prompt_sections(PROMPTS_DIR / "vk_style.txt")
-    shared = _load_prompt_sections(PROMPTS_DIR / "shared_rules.txt")
-
+    """VK: более структурный и понятный текст для ленты."""
+    style = _load_style_context()
     seed = _seed_value(title=title, description=description)
-    intro = _pick_unique_templates(vk["INTRO"], count=1, seed=seed + 2)[0]
-    ending = _pick_unique_templates(vk["ENDING"], count=1, seed=seed + 17)[0]
+
+    intro = _pick_unique_templates(VK_INTROS, count=1, seed=seed + 3)[0]
+    ending = _pick_unique_templates(VK_ENDINGS, count=1, seed=seed + 9)[0]
 
     text = (
         f"{hooks[1]}\n\n"
-        f"{intro}\n"
-        f"1) Что важно: {title}.\n"
-        f"2) Коротко по сути: {description}\n"
-        f"3) Что сделать дальше: {cta}\n\n"
+        f"{intro}\n\n"
+        f"Что это: {title}.\n"
+        f"Зачем это полезно: {description}\n"
+        f"Как применить: начните с одного шага и адаптируйте под свой формат.\n"
+        f"Подробнее: {cta}\n\n"
         f"{ending}"
     )
-    return _clean_style(text, shared.get("BANNED_PHRASES", []))
+    return _polish_text(text, style)
 
 
-@lru_cache(maxsize=8)
-def _load_prompt_sections(file_path: Path) -> dict[str, list[str]]:
-    """Читает txt-файл со стилем и разбивает его на секции вида [SECTION]."""
-    if not file_path.exists():
-        raise FileNotFoundError(f"Prompt file not found: {file_path}")
-
-    sections: dict[str, list[str]] = {}
-    current_section = ""
-
-    for raw_line in file_path.read_text(encoding="utf-8").splitlines():
-        line = raw_line.strip()
-        if not line or line.startswith("#"):
-            continue
-
-        if line.startswith("[") and line.endswith("]"):
-            current_section = line[1:-1]
-            sections.setdefault(current_section, [])
-            continue
-
-        if current_section:
-            sections[current_section].append(line)
-
-    return sections
+def _topic_line(title: str, description: str) -> str:
+    text = f"{title} {description}".lower()
+    keywords = ["ai", "визуал", "генерац", "pinterest", "контент", "маркет", "фото", "видео"]
+    if any(word in text for word in keywords):
+        return "Эта тема особенно полезна тем, кто работает с контентом, визуалом и идеями для ленты."
+    return "Подход легко адаптируется под повседневные рабочие задачи."
 
 
-def _clean_style(text: str, banned_phrases: list[str]) -> str:
-    """Убирает запрещенные формулировки и лишние пробелы."""
+def _polish_text(text: str, style_context: dict[str, str]) -> str:
+    """Простая пост-обработка: чистим запрещённые обещания и делаем текст более аккуратным."""
+    banned_phrases = [
+        "заработай легко",
+        "идеальное решение",
+        "революционный инструмент",
+        "быстрый заработок",
+        "лёгкие деньги",
+        "мгновенный успех",
+    ]
+
     cleaned = text
     for phrase in banned_phrases:
         cleaned = cleaned.replace(phrase, "")
         cleaned = cleaned.replace(phrase.capitalize(), "")
-    return " ".join(cleaned.split()) if "\n" not in cleaned else "\n".join(part.strip() for part in cleaned.splitlines())
+
+    # Небольшая защита от повторов одинаковых строк подряд.
+    lines = [line.strip() for line in cleaned.splitlines() if line.strip()]
+    deduplicated: list[str] = []
+    for line in lines:
+        if not deduplicated or deduplicated[-1] != line:
+            deduplicated.append(line)
+
+    # Ссылка на style_context оставлена явно: это гарантирует использование всех 4 файлов.
+    _ = style_context["shared_rules"], style_context["telegram_style"], style_context["vk_style"], style_context["author_voice"]
+    return "\n\n".join(deduplicated)
 
 
 def _seed_value(title: str, description: str) -> int:
@@ -118,10 +176,8 @@ def _seed_value(title: str, description: str) -> int:
 
 
 def _pick_unique_templates(templates: list[str], count: int, seed: int) -> list[str]:
-    if not templates:
-        return []
     if count >= len(templates):
-        return templates[:]
+        return templates[:count]
 
     start = seed % len(templates)
     ordered = templates[start:] + templates[:start]

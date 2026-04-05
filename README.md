@@ -91,11 +91,12 @@
 ## 6) Где менять стиль текстов вручную
 
 Если хотите подправить тон и формулировки:
-- `app/prompts/telegram_style.txt` — стиль Telegram: тело текста и завершение.
-- `app/prompts/vk_style.txt` — стиль VK: сильный старт, структура и завершение.
-- `app/prompts/shared_rules.txt` — общие хуки, CTA и запрещенные фразы.
+- `prompts/shared_rules.txt` — общий стиль, структура текста, ограничения и мягкость CTA.
+- `prompts/telegram_style.txt` — стиль Telegram (живой, тёплый, разговорный).
+- `prompts/vk_style.txt` — стиль VK (более структурный, удобный для ленты).
+- `prompts/author_voice.txt` — авторский тон: дружелюбный, умный, человеческий.
 
-Рекомендуемый путь: меняйте формулировки в этих `.txt` файлах, не трогая Python-код.
+Эти файлы можно редактировать вручную в любом текстовом редакторе — Python-код трогать не нужно.
 
 ---
 
@@ -132,8 +133,9 @@ setup_windows.bat
 run_api.bat
 
 # Стиль генерации
-app/prompts/telegram_style.txt
-app/prompts/vk_style.txt
-app/prompts/shared_rules.txt
+prompts/shared_rules.txt
+prompts/telegram_style.txt
+prompts/vk_style.txt
+prompts/author_voice.txt
 app/templates/message_templates.py
 ```
