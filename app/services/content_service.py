@@ -1,0 +1,67 @@
+from datetime import UTC, datetime
+from uuid import uuid4
+
+from app.models.schemas import DraftCreateRequest, DraftResponse
+from app.services.storage_service import StorageService
+from app.templates.message_templates import build_telegram_text, build_utm_link, build_vk_text
+
+
+class ContentService:
+    """Сервис с базовой логикой генерации и модерации черновиков."""
+
+    def __init__(self, storage_service: StorageService) -> None:
+        self.storage_service = storage_service
+
+    def create_draft_from_pin(self, payload: DraftCreateRequest) -> DraftResponse:
+        """Создает и сохраняет новый черновик на основе данных пина."""
+        utm_link = build_utm_link(payload.referral_url, source="pinterest", campaign=payload.campaign)
+
+        telegram_text = build_telegram_text(
+            title=payload.pin_title,
+            description=payload.pin_description,
+            utm_link=utm_link,
+        )
+        vk_text = build_vk_text(
+            title=payload.pin_title,
+            description=payload.pin_description,
+            utm_link=utm_link,
+        )
+
+        draft = DraftResponse(
+            id=str(uuid4()),
+            status="draft",
+            created_at=datetime.now(UTC),
+            source_url=payload.source_url,
+            telegram_text=telegram_text,
+            vk_text=vk_text,
+        )
+
+        self.storage_service.save_draft(draft)
+        return draft
+
+    def list_drafts(self) -> list[DraftResponse]:
+        """Возвращает все сохраненные черновики."""
+        return self.storage_service.load_drafts()
+
+    def approve_draft(self, draft_id: str) -> bool:
+        """Обновляет статус черновика на approved."""
+        return self._update_draft_status(draft_id=draft_id, new_status="approved")
+
+    def reject_draft(self, draft_id: str) -> bool:
+        """Обновляет статус черновика на rejected."""
+        return self._update_draft_status(draft_id=draft_id, new_status="rejected")
+
+    def _update_draft_status(self, draft_id: str, new_status: str) -> bool:
+        drafts = self.storage_service.load_drafts()
+        updated = False
+
+        for draft in drafts:
+            if draft.id == draft_id:
+                draft.status = new_status
+                updated = True
+                break
+
+        if updated:
+            self.storage_service.overwrite_drafts(drafts)
+
+        return updated
