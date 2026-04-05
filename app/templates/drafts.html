@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Список черновиков</h1>
+
+{% if drafts %}
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Статус</th>
+        <th>Telegram</th>
+        <th>ВКонтакте</th>
+        <th>Хуки (3)</th>
+        <th>CTA (2)</th>
+        <th>Действия</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for draft in drafts %}
+      <tr>
+        <td>{{ draft.id }}</td>
+        <td>{{ draft.status }}</td>
+        <td>{{ draft.telegram_text }}</td>
+        <td>{{ draft.vk_text }}</td>
+        <td>
+          <ul>
+            {% for hook in draft.hooks %}
+            <li>{{ hook }}</li>
+            {% endfor %}
+          </ul>
+        </td>
+        <td>
+          <ul>
+            {% for cta in draft.cta_variants %}
+            <li>{{ cta }}</li>
+            {% endfor %}
+          </ul>
+        </td>
+        <td>
+          <div class="actions">
+            <form action="/web/drafts/{{ draft.id }}/approve" method="post">
+              <button type="submit" class="ok">Одобрить</button>
+            </form>
+            <form action="/web/drafts/{{ draft.id }}/reject" method="post">
+              <button type="submit" class="danger">Отклонить</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p>Черновиков пока нет.</p>
+{% endif %}
+{% endblock %}

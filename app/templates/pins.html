@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Импорт Pinterest-пинов</h1>
+
+<form action="/web/upload-csv" method="post" enctype="multipart/form-data">
+  <label>Выберите CSV-файл:</label>
+  <input type="file" name="file" accept=".csv" required>
+  <button type="submit">Загрузить CSV</button>
+</form>
+
+<h2>Импортированные пины</h2>
+{% if pins %}
+  <table>
+    <thead>
+      <tr>
+        <th>pin_id</th>
+        <th>title</th>
+        <th>description</th>
+        <th>board</th>
+        <th>keywords</th>
+        <th>Действие</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for pin in pins %}
+      <tr>
+        <td>{{ pin.pin_id }}</td>
+        <td>{{ pin.title }}</td>
+        <td>{{ pin.description }}</td>
+        <td>{{ pin.board }}</td>
+        <td>{{ pin.keywords }}</td>
+        <td>
+          <form action="/web/pins/{{ pin.pin_id }}/generate" method="post">
+            <button type="submit">Сгенерировать черновик</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p>Пока нет импортированных пинов. Сначала загрузите CSV.</p>
+{% endif %}
+{% endblock %}
