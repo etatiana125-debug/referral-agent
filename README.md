@@ -1,5 +1,7 @@
 # Referral Content Agent (MVP)
 
+PROJECT: PINTEREST_REFERRAL_AGENT
+
 VERSION: IMAGE_IMPORT_ENABLED
 
 Простой веб-проект на FastAPI для новичка.
