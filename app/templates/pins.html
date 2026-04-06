@@ -1,10 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Импорт Pinterest-пинов</h1>
+<p><strong>PROJECT: PINTEREST_REFERRAL_AGENT</strong></p>
+<p><strong>VERSION: IMAGE_IMPORT_ENABLED</strong></p>
 <p><strong>Доступен импорт изображений: JPG/PNG и ZIP</strong></p>
 
 <section style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; margin-bottom: 16px;">
-  <h2 style="margin-top: 0;">Импорт из CSV</h2>
+  <h2 style="margin-top: 0;">Сценарий 1: Импорт из CSV</h2>
   <form action="/web/upload-csv" method="post" enctype="multipart/form-data">
     <label>Выберите CSV-файл:</label>
     <input type="file" name="file" accept=".csv" required>
@@ -13,7 +15,7 @@
 </section>
 
 <section style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; margin-bottom: 16px;">
-  <h2 style="margin-top: 0;">Импорт изображений</h2>
+  <h2 style="margin-top: 0;">Сценарий 2: Импорт изображений</h2>
   <p>Можно загрузить несколько JPG/PNG или один ZIP с JPG/PNG.</p>
   <form action="/web/upload-images" method="post" enctype="multipart/form-data">
     <div style="margin-bottom: 10px;">

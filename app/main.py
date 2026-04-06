@@ -91,13 +91,14 @@ def list_imported_pins() -> list[PinRecord]:
 
 @app.get("/")
 def home_page(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(request, "index.html", {"request": request})
 
 
 @app.get("/web/pins")
 def pins_page(request: Request, message: str = ""):
     pins = pin_import_service.load_pins()
     return templates.TemplateResponse(
+        request,
         "pins.html",
         {
             "request": request,
@@ -199,6 +200,7 @@ def generate_draft_from_pin(pin_id: str):
 def drafts_page(request: Request, message: str = ""):
     drafts = content_service.list_drafts()
     return templates.TemplateResponse(
+        request,
         "drafts.html",
         {
             "request": request,
@@ -215,6 +217,7 @@ def draft_detail_page(request: Request, draft_id: str, message: str = ""):
         return RedirectResponse(url="/web/drafts?message=Черновик не найден", status_code=303)
 
     return templates.TemplateResponse(
+        request,
         "draft_detail.html",
         {
             "request": request,
