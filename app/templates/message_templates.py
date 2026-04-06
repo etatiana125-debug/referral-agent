@@ -112,13 +112,22 @@ def build_telegram_text(title: str, description: str, hooks: list[str], cta: str
     opener = _pick_unique_templates(TG_OPENERS, count=1, seed=seed + 5)[0]
     ending = _pick_unique_templates(TG_ENDINGS, count=1, seed=seed + 7)[0]
 
+    if _is_technical_content(title=title, description=description):
+        text = (
+            "На изображении вижу технический или служебный материал.\n\n"
+            "Для такого пина лучше сделать нейтральную подпись и сначала проверить контекст вручную.\n\n"
+            f"{cta}"
+        )
+        return _polish_text(text, style)
+
     topical_line = _topic_line(title=title, description=description)
+    details_line = _details_line(title=title, description=description)
 
     text = (
         f"{hooks[0]}\n\n"
         f"{opener}\n"
         f"{topical_line}\n"
-        f"{description}\n\n"
+        f"{details_line}\n\n"
         f"{cta}\n"
         f"{ending}"
     )
@@ -130,14 +139,23 @@ def build_vk_text(title: str, description: str, hooks: list[str], cta: str) -> s
     style = _load_style_context()
     seed = _seed_value(title=title, description=description)
 
+    if _is_technical_content(title=title, description=description):
+        text = (
+            "Обнаружен технический визуал (служебный скрин, QR или интерфейсный элемент).\n\n"
+            "Рекомендуется нейтральная публикация: короткий контекст, цель изображения и ручная проверка перед постингом.\n\n"
+            f"Ссылка: {cta}"
+        )
+        return _polish_text(text, style)
+
     intro = _pick_unique_templates(VK_INTROS, count=1, seed=seed + 3)[0]
     ending = _pick_unique_templates(VK_ENDINGS, count=1, seed=seed + 9)[0]
+    details_line = _details_line(title=title, description=description)
 
     text = (
         f"{hooks[1]}\n\n"
         f"{intro}\n\n"
         f"Что это: {title}.\n"
-        f"Зачем это полезно: {description}\n"
+        f"Зачем это полезно: {details_line}\n"
         f"Как применить: начните с одного шага и адаптируйте под свой формат.\n"
         f"Подробнее: {cta}\n\n"
         f"{ending}"
@@ -176,6 +194,24 @@ def _topic_line(title: str, description: str) -> str:
     if any(word in text for word in keywords):
         return "Эта тема особенно полезна тем, кто работает с контентом, визуалом и идеями для ленты."
     return "Подход легко адаптируется под повседневные рабочие задачи."
+
+
+def _details_line(title: str, description: str) -> str:
+    clean_description = description.strip()
+    if not clean_description:
+        return "Короткий и практичный разбор без лишней теории."
+
+    normalized_title = title.strip().lower()
+    normalized_description = clean_description.lower()
+    if normalized_title and normalized_title in normalized_description:
+        return "Разберите ключевую идею по шагам и покажите, как применить её на практике."
+    return clean_description
+
+
+def _is_technical_content(title: str, description: str) -> bool:
+    technical_markers = ["техническ", "qr", "barcode", "служебн", "интерфейс", "скриншот"]
+    text = f"{title} {description}".lower()
+    return any(marker in text for marker in technical_markers)
 
 
 def _polish_text(text: str, style_context: dict[str, str]) -> str:

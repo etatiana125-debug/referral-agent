@@ -64,3 +64,44 @@ def test_anti_repeat_for_recent_hook_and_cta() -> None:
 
     assert next_hooks[0] != hooks[0]
     assert next_ctas[0] != ctas[0]
+
+
+def test_technical_content_generates_neutral_text() -> None:
+    hooks, ctas = build_content_options(
+        title="Техническое изображение",
+        description="Служебный визуал (например QR-код).",
+        utm_link="https://example.com/ref",
+    )
+
+    tg_text = build_telegram_text(
+        title="Техническое изображение",
+        description="Служебный визуал (например QR-код).",
+        hooks=hooks,
+        cta=ctas[0],
+    )
+    vk_text = build_vk_text(
+        title="Техническое изображение",
+        description="Служебный визуал (например QR-код).",
+        hooks=hooks,
+        cta=ctas[1],
+    )
+
+    assert "технический" in tg_text.lower()
+    assert "нейтраль" in vk_text.lower()
+
+
+def test_telegram_avoids_title_description_duplication() -> None:
+    hooks, ctas = build_content_options(
+        title="Контент План",
+        description="Контент План для ленты",
+        utm_link="https://example.com/ref",
+    )
+
+    tg_text = build_telegram_text(
+        title="Контент План",
+        description="Контент План для ленты",
+        hooks=hooks,
+        cta=ctas[0],
+    )
+
+    assert "Разберите ключевую идею по шагам" in tg_text
