@@ -6,7 +6,7 @@ from app.models.schemas import PinRecord
 
 
 class PinImportService:
-    """Сервис для импорта Pinterest-пинов из CSV в JSON-хранилище."""
+    """Сервис для импорта Pinterest-пинов из CSV и других источников в JSON."""
 
     REQUIRED_FIELDS = ["pin_id", "title", "description", "board", "keywords", "referral_link"]
 
@@ -33,12 +33,23 @@ class PinImportService:
                 cleaned = {key: (value or "").strip() for key, value in row.items()}
                 pins.append(PinRecord.model_validate(cleaned))
 
-        serializable = [pin.model_dump() for pin in pins]
+        self.save_pins(pins, mode="replace")
+        return len(pins)
+
+    def save_pins(self, pins: list[PinRecord], mode: str = "append") -> int:
+        """Сохраняет пины в JSON.
+
+        mode=append: добавляет к существующим.
+        mode=replace: полностью заменяет файл.
+        """
+        existing = [] if mode == "replace" else self.load_pins()
+        updated = existing + pins
+
+        serializable = [pin.model_dump() for pin in updated]
         self.output_file_path.write_text(
             json.dumps(serializable, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
-
         return len(pins)
 
     def load_pins(self) -> list[PinRecord]:

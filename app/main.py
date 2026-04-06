@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import datetime
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import RedirectResponse
@@ -14,16 +15,20 @@ from app.models.schemas import (
     RejectDraftResponse,
 )
 from app.services.content_service import ContentService
+from app.services.image_analysis_service import ImageAnalysisService
+from app.services.image_import_service import ImageImportService
 from app.services.pin_import_service import PinImportService
 from app.services.storage_service import StorageService
 
-app = FastAPI(title="Referral Content Agent", version="0.4.0")
+app = FastAPI(title="Referral Content Agent", version="0.5.0")
 templates = Jinja2Templates(directory="app/templates")
 
 # Инициализируем сервисы один раз при запуске приложения.
 storage_service = StorageService(file_path="data/drafts.json")
 content_service = ContentService(storage_service=storage_service)
 pin_import_service = PinImportService(output_file_path="data/pins.json")
+image_analysis_service = ImageAnalysisService()
+image_import_service = ImageImportService(image_analysis_service=image_analysis_service)
 
 
 @app.get("/health")
@@ -107,7 +112,6 @@ async def upload_csv(file: UploadFile = File(...)):
     uploads_dir = Path("data/uploads")
     uploads_dir.mkdir(parents=True, exist_ok=True)
 
-    # Сохраняем файл на диск, чтобы повторно использовать его при отладке.
     saved_path = uploads_dir / (file.filename or "pins.csv")
     contents = await file.read()
     saved_path.write_bytes(contents)
@@ -118,7 +122,56 @@ async def upload_csv(file: UploadFile = File(...)):
         return RedirectResponse(url=f"/web/pins?message={str(error)}", status_code=303)
 
     return RedirectResponse(
-        url=f"/web/pins?message=Импортировано пинов: {imported_count}",
+        url=f"/web/pins?message=Импортировано пинов из CSV: {imported_count}",
+        status_code=303,
+    )
+
+
+@app.post("/web/upload-images")
+async def upload_images(
+    image_files: list[UploadFile] = File(default=[]),
+    zip_file: UploadFile | None = File(default=None),
+    board: str = Form(default="Image Imports"),
+    referral_link: str = Form(default="https://example.com/ref/default"),
+):
+    uploads_dir = Path("data/uploads/images") / datetime.now().strftime("%Y%m%d_%H%M%S")
+    uploads_dir.mkdir(parents=True, exist_ok=True)
+
+    collected_image_paths: list[Path] = []
+
+    # 1) Сохраняем загруженные изображения.
+    for upload in image_files:
+        if not upload.filename:
+            continue
+        file_path = uploads_dir / upload.filename
+        file_path.write_bytes(await upload.read())
+        collected_image_paths.append(file_path)
+
+    # 2) Если есть ZIP — извлекаем изображения из архива.
+    if zip_file and zip_file.filename:
+        zip_path = uploads_dir / zip_file.filename
+        zip_path.write_bytes(await zip_file.read())
+        extracted_paths = image_import_service.extract_zip_images(
+            zip_path=zip_path,
+            output_dir=uploads_dir / "unzipped",
+        )
+        collected_image_paths.extend(extracted_paths)
+
+    if not collected_image_paths:
+        return RedirectResponse(url="/web/pins?message=Не найдено изображений для импорта", status_code=303)
+
+    pins = image_import_service.build_pins_from_images(
+        image_paths=collected_image_paths,
+        board=board or "Image Imports",
+        referral_link=referral_link or "https://example.com/ref/default",
+    )
+
+    if not pins:
+        return RedirectResponse(url="/web/pins?message=Поддерживаются только JPG/JPEG/PNG", status_code=303)
+
+    pin_import_service.save_pins(pins, mode="append")
+    return RedirectResponse(
+        url=f"/web/pins?message=Импортировано пинов из изображений: {len(pins)}",
         status_code=303,
     )
 

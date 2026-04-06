@@ -88,11 +88,16 @@ def build_content_options(
         seed=seed,
         recent_value=recent_hook,
     )
+
+    recent_cta_base = recent_cta
+    if recent_cta and recent_cta.endswith(utm_link):
+        recent_cta_base = recent_cta[: -len(utm_link)].strip()
+
     ctas = _pick_with_anti_repeat(
         templates=cta_library,
         count=2,
         seed=seed + 13,
-        recent_value=recent_cta,
+        recent_value=recent_cta_base,
     )
 
     cta_with_link = [f"{cta} {utm_link}" for cta in ctas]

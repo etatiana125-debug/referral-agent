@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 
 from app.models.schemas import DraftCreateRequest, DraftResponse
@@ -43,7 +43,7 @@ class ContentService:
         draft = DraftResponse(
             id=str(uuid4()),
             status="draft",
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
             source_url=payload.source_url,
             pin_id=payload.pin_id,
             pin_title=payload.pin_title,

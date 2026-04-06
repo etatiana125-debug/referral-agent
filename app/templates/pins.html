@@ -2,11 +2,42 @@
 {% block content %}
 <h1>Импорт Pinterest-пинов</h1>
 
-<form action="/web/upload-csv" method="post" enctype="multipart/form-data">
-  <label>Выберите CSV-файл:</label>
-  <input type="file" name="file" accept=".csv" required>
-  <button type="submit">Загрузить CSV</button>
-</form>
+<section style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; margin-bottom: 16px;">
+  <h2 style="margin-top: 0;">Импорт из CSV</h2>
+  <form action="/web/upload-csv" method="post" enctype="multipart/form-data">
+    <label>Выберите CSV-файл:</label>
+    <input type="file" name="file" accept=".csv" required>
+    <button type="submit">Загрузить CSV</button>
+  </form>
+</section>
+
+<section style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; margin-bottom: 16px;">
+  <h2 style="margin-top: 0;">Импорт изображений</h2>
+  <p>Можно загрузить несколько JPG/PNG или один ZIP с JPG/PNG.</p>
+  <form action="/web/upload-images" method="post" enctype="multipart/form-data">
+    <div style="margin-bottom: 10px;">
+      <label>Изображения (можно несколько):</label><br>
+      <input type="file" name="image_files" accept=".jpg,.jpeg,.png" multiple>
+    </div>
+
+    <div style="margin-bottom: 10px;">
+      <label>ZIP-архив с изображениями:</label><br>
+      <input type="file" name="zip_file" accept=".zip">
+    </div>
+
+    <div style="margin-bottom: 10px;">
+      <label>Board (по умолчанию):</label><br>
+      <input type="text" name="board" value="Image Imports" style="width: 320px;">
+    </div>
+
+    <div style="margin-bottom: 10px;">
+      <label>Referral link (общая):</label><br>
+      <input type="url" name="referral_link" value="https://example.com/ref/default" style="width: 420px;">
+    </div>
+
+    <button type="submit">Импортировать изображения</button>
+  </form>
+</section>
 
 <h2>Импортированные пины</h2>
 {% if pins %}
@@ -39,6 +70,6 @@
     </tbody>
   </table>
 {% else %}
-  <p>Пока нет импортированных пинов. Сначала загрузите CSV.</p>
+  <p>Пока нет импортированных пинов. Сначала загрузите CSV или изображения.</p>
 {% endif %}
 {% endblock %}

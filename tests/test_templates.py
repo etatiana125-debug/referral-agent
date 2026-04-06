@@ -44,7 +44,7 @@ def test_platform_text_styles_are_different() -> None:
     )
 
     assert tg_text != vk_text
-    assert "1) Что важно" in vk_text
+    assert "Что это:" in vk_text
 
 
 def test_anti_repeat_for_recent_hook_and_cta() -> None:
