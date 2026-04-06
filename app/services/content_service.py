@@ -45,6 +45,8 @@ class ContentService:
             status="draft",
             created_at=datetime.now(UTC),
             source_url=payload.source_url,
+            pin_id=payload.pin_id,
+            pin_title=payload.pin_title,
             telegram_text=telegram_text,
             vk_text=vk_text,
             hooks=hooks,

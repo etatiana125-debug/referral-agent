@@ -6,7 +6,8 @@
   <table>
     <thead>
       <tr>
-        <th>ID</th>
+        <th>ID черновика</th>
+        <th>Пин</th>
         <th>Статус</th>
         <th>Выбранный хук</th>
         <th>Выбранный CTA</th>
@@ -17,23 +18,27 @@
       {% for draft in drafts %}
       <tr>
         <td>{{ draft.id }}</td>
+        <td>
+          <div><strong>{{ draft.pin_title or 'Без названия' }}</strong></div>
+          <div>ID пина: {{ draft.pin_id or 'не указан' }}</div>
+        </td>
         <td>{{ draft.status }}</td>
         <td>
           {% if draft.selected_hook %}
-            ✅ Есть выбор
+            ✅ Выбран
           {% else %}
             ⏳ Не выбран
           {% endif %}
         </td>
         <td>
           {% if draft.selected_cta %}
-            ✅ Есть выбор
+            ✅ Выбран
           {% else %}
             ⏳ Не выбран
           {% endif %}
         </td>
         <td>
-          <a href="/web/drafts/{{ draft.id }}">Открыть черновик</a>
+          <a href="/web/drafts/{{ draft.id }}">Открыть</a>
         </td>
       </tr>
       {% endfor %}

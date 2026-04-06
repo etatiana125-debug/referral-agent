@@ -1,50 +1,57 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Черновик: {{ draft.id }}</h1>
+<p><strong>Пин:</strong> {{ draft.pin_title or 'Без названия' }} {% if draft.pin_id %}(ID: {{ draft.pin_id }}){% endif %}</p>
 <p><strong>Статус:</strong> {{ draft.status }}</p>
 
-<h2>Telegram-черновик</h2>
-<textarea id="telegramText" rows="8" style="width: 100%;">{{ draft.telegram_text }}</textarea>
-<div style="margin-top: 8px;">
-  <button type="button" onclick="copyById('telegramText')">Скопировать Telegram-текст</button>
+<div style="display: grid; gap: 16px;">
+  <section style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px;">
+    <h2 style="margin-top: 0;">Telegram-черновик</h2>
+    <textarea id="telegramText" rows="8" style="width: 100%;">{{ draft.telegram_text }}</textarea>
+    <button type="button" style="margin-top: 8px;" onclick="copyById('telegramText')">Скопировать Telegram</button>
+  </section>
+
+  <section style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px;">
+    <h2 style="margin-top: 0;">VK-черновик</h2>
+    <textarea id="vkText" rows="8" style="width: 100%;">{{ draft.vk_text }}</textarea>
+    <button type="button" style="margin-top: 8px;" onclick="copyById('vkText')">Скопировать VK</button>
+  </section>
 </div>
 
-<h2>VK-черновик</h2>
-<textarea id="vkText" rows="8" style="width: 100%;">{{ draft.vk_text }}</textarea>
-<div style="margin-top: 8px;">
-  <button type="button" onclick="copyById('vkText')">Скопировать VK-текст</button>
-</div>
+<section style="margin-top: 16px; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px;">
+  <h2 style="margin-top: 0;">Выбор лучшего хука и CTA</h2>
+  <form action="/web/drafts/{{ draft.id }}/select-options" method="post">
+    <h3>3 варианта хука</h3>
+    {% for hook in draft.hooks %}
+      <div style="display: flex; gap: 8px; align-items: flex-start; margin-bottom: 10px;">
+        <label style="flex: 1;">
+          <input type="radio" name="selected_hook" value="{{ hook }}" {% if draft.selected_hook == hook %}checked{% endif %} required>
+          {{ hook }}
+        </label>
+        <button type="button" onclick="copyText('{{ hook|replace("'", "\\'") }}')">Скопировать хук</button>
+      </div>
+    {% endfor %}
 
-<h2>Выберите лучший хук и CTA</h2>
-<form action="/web/drafts/{{ draft.id }}/select-options" method="post">
-  <h3>3 варианта хука</h3>
-  {% for hook in draft.hooks %}
-    <div style="margin-bottom: 8px;">
-      <label>
-        <input type="radio" name="selected_hook" value="{{ hook }}" {% if draft.selected_hook == hook %}checked{% endif %} required>
-        {{ hook }}
-      </label>
-    </div>
-  {% endfor %}
+    <h3>2 варианта CTA</h3>
+    {% for cta in draft.cta_variants %}
+      <div style="display: flex; gap: 8px; align-items: flex-start; margin-bottom: 10px;">
+        <label style="flex: 1;">
+          <input type="radio" name="selected_cta" value="{{ cta }}" {% if draft.selected_cta == cta %}checked{% endif %} required>
+          {{ cta }}
+        </label>
+        <button type="button" onclick="copyText('{{ cta|replace("'", "\\'") }}')">Скопировать CTA</button>
+      </div>
+    {% endfor %}
 
-  <h3>2 варианта CTA</h3>
-  {% for cta in draft.cta_variants %}
-    <div style="margin-bottom: 8px;">
-      <label>
-        <input type="radio" name="selected_cta" value="{{ cta }}" {% if draft.selected_cta == cta %}checked{% endif %} required>
-        {{ cta }}
-      </label>
-    </div>
-  {% endfor %}
+    <button type="submit" class="ok">Сохранить выбранные варианты</button>
+  </form>
+</section>
 
-  <button type="submit" class="ok">Сохранить выбранные варианты</button>
-</form>
-
-{% if draft.selected_hook or draft.selected_cta %}
-  <h3>Текущий выбор</h3>
+<section style="margin-top: 16px; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px;">
+  <h3 style="margin-top: 0;">Текущий выбор</h3>
   <p><strong>Хук:</strong> {{ draft.selected_hook or 'не выбран' }}</p>
   <p><strong>CTA:</strong> {{ draft.selected_cta or 'не выбран' }}</p>
-{% endif %}
+</section>
 
 <div class="actions" style="margin-top: 16px;">
   <form action="/web/drafts/{{ draft.id }}/approve" method="post">
@@ -62,6 +69,11 @@
     target.select();
     target.setSelectionRange(0, 99999);
     navigator.clipboard.writeText(target.value);
+    alert('Текст скопирован');
+  }
+
+  function copyText(value) {
+    navigator.clipboard.writeText(value);
     alert('Текст скопирован');
   }
 </script>

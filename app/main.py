@@ -135,6 +135,7 @@ def generate_draft_from_pin(pin_id: str):
         source_url=f"https://www.pinterest.com/pin/{pin.pin_id}/",
         referral_url=pin.referral_link,
         campaign="from_web_ui",
+        pin_id=pin.pin_id,
     )
     draft = content_service.create_draft_from_pin(payload)
 

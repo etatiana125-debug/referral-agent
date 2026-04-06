@@ -14,9 +14,12 @@ def test_approve_and_reject_draft(tmp_path) -> None:
             source_url="https://example.com/pin/1",
             referral_url="https://example.com/ref/1",
             campaign="test",
+            pin_id="pin-1",
         )
     )
 
+    assert draft.pin_id == "pin-1"
+    assert draft.pin_title == "Title"
     assert len(draft.hooks) == 3
     assert len(draft.cta_variants) == 2
 
@@ -39,6 +42,7 @@ def test_save_selected_options(tmp_path) -> None:
             source_url="https://example.com/pin/1",
             referral_url="https://example.com/ref/1",
             campaign="test",
+            pin_id="pin-2",
         )
     )
 

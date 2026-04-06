@@ -12,6 +12,7 @@ class DraftCreateRequest(BaseModel):
     source_url: str = Field(..., description="Ссылка на исходный пин")
     referral_url: str = Field(..., description="Реферальная ссылка")
     campaign: str = Field(default="spring_campaign", description="Название UTM-кампании")
+    pin_id: str | None = Field(default=None, description="ID пина (если есть)")
 
 
 class DraftResponse(BaseModel):
@@ -21,6 +22,8 @@ class DraftResponse(BaseModel):
     status: Literal["draft", "approved", "rejected"] = "draft"
     created_at: datetime
     source_url: str
+    pin_id: str | None = None
+    pin_title: str | None = None
     telegram_text: str
     vk_text: str
     hooks: list[str] = Field(default_factory=list)
