@@ -49,6 +49,8 @@ class ContentService:
             vk_text=vk_text,
             hooks=hooks,
             cta_variants=cta_variants,
+            selected_hook=None,
+            selected_cta=None,
         )
 
         self.storage_service.save_draft(draft)
@@ -57,6 +59,26 @@ class ContentService:
     def list_drafts(self) -> list[DraftResponse]:
         """Возвращает все сохраненные черновики."""
         return self.storage_service.load_drafts()
+
+    def get_draft(self, draft_id: str) -> DraftResponse | None:
+        """Возвращает черновик по ID."""
+        for draft in self.storage_service.load_drafts():
+            if draft.id == draft_id:
+                return draft
+        return None
+
+    def save_selected_options(self, draft_id: str, selected_hook: str, selected_cta: str) -> bool:
+        """Сохраняет выбранные пользователем хук и CTA в черновике."""
+        drafts = self.storage_service.load_drafts()
+
+        for draft in drafts:
+            if draft.id == draft_id:
+                draft.selected_hook = selected_hook
+                draft.selected_cta = selected_cta
+                self.storage_service.overwrite_drafts(drafts)
+                return True
+
+        return False
 
     def approve_draft(self, draft_id: str) -> bool:
         """Обновляет статус черновика на approved."""

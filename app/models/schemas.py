@@ -25,6 +25,8 @@ class DraftResponse(BaseModel):
     vk_text: str
     hooks: list[str] = Field(default_factory=list)
     cta_variants: list[str] = Field(default_factory=list)
+    selected_hook: str | None = None
+    selected_cta: str | None = None
 
 
 class ApproveDraftResponse(BaseModel):

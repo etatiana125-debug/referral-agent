@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, Request, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
@@ -17,7 +17,7 @@ from app.services.content_service import ContentService
 from app.services.pin_import_service import PinImportService
 from app.services.storage_service import StorageService
 
-app = FastAPI(title="Referral Content Agent", version="0.3.0")
+app = FastAPI(title="Referral Content Agent", version="0.4.0")
 templates = Jinja2Templates(directory="app/templates")
 
 # Инициализируем сервисы один раз при запуске приложения.
@@ -136,9 +136,9 @@ def generate_draft_from_pin(pin_id: str):
         referral_url=pin.referral_link,
         campaign="from_web_ui",
     )
-    content_service.create_draft_from_pin(payload)
+    draft = content_service.create_draft_from_pin(payload)
 
-    return RedirectResponse(url="/web/drafts?message=Черновик создан", status_code=303)
+    return RedirectResponse(url=f"/web/drafts/{draft.id}?message=Черновик создан", status_code=303)
 
 
 @app.get("/web/drafts")
@@ -154,15 +154,44 @@ def drafts_page(request: Request, message: str = ""):
     )
 
 
+@app.get("/web/drafts/{draft_id}")
+def draft_detail_page(request: Request, draft_id: str, message: str = ""):
+    draft = content_service.get_draft(draft_id)
+    if not draft:
+        return RedirectResponse(url="/web/drafts?message=Черновик не найден", status_code=303)
+
+    return templates.TemplateResponse(
+        "draft_detail.html",
+        {
+            "request": request,
+            "draft": draft,
+            "message": message,
+        },
+    )
+
+
+@app.post("/web/drafts/{draft_id}/select-options")
+def select_draft_options(draft_id: str, selected_hook: str = Form(...), selected_cta: str = Form(...)):
+    updated = content_service.save_selected_options(
+        draft_id=draft_id,
+        selected_hook=selected_hook,
+        selected_cta=selected_cta,
+    )
+    if not updated:
+        return RedirectResponse(url="/web/drafts?message=Черновик не найден", status_code=303)
+
+    return RedirectResponse(url=f"/web/drafts/{draft_id}?message=Выбор сохранен", status_code=303)
+
+
 @app.post("/web/drafts/{draft_id}/approve")
 def approve_draft_from_ui(draft_id: str):
     if not content_service.approve_draft(draft_id):
         return RedirectResponse(url="/web/drafts?message=Черновик не найден", status_code=303)
-    return RedirectResponse(url="/web/drafts?message=Черновик одобрен", status_code=303)
+    return RedirectResponse(url=f"/web/drafts/{draft_id}?message=Черновик одобрен", status_code=303)
 
 
 @app.post("/web/drafts/{draft_id}/reject")
 def reject_draft_from_ui(draft_id: str):
     if not content_service.reject_draft(draft_id):
         return RedirectResponse(url="/web/drafts?message=Черновик не найден", status_code=303)
-    return RedirectResponse(url="/web/drafts?message=Черновик отклонен", status_code=303)
+    return RedirectResponse(url=f"/web/drafts/{draft_id}?message=Черновик отклонен", status_code=303)

@@ -8,11 +8,9 @@
       <tr>
         <th>ID</th>
         <th>Статус</th>
-        <th>Telegram</th>
-        <th>ВКонтакте</th>
-        <th>Хуки (3)</th>
-        <th>CTA (2)</th>
-        <th>Действия</th>
+        <th>Выбранный хук</th>
+        <th>Выбранный CTA</th>
+        <th>Действие</th>
       </tr>
     </thead>
     <tbody>
@@ -20,31 +18,22 @@
       <tr>
         <td>{{ draft.id }}</td>
         <td>{{ draft.status }}</td>
-        <td>{{ draft.telegram_text }}</td>
-        <td>{{ draft.vk_text }}</td>
         <td>
-          <ul>
-            {% for hook in draft.hooks %}
-            <li>{{ hook }}</li>
-            {% endfor %}
-          </ul>
+          {% if draft.selected_hook %}
+            ✅ Есть выбор
+          {% else %}
+            ⏳ Не выбран
+          {% endif %}
         </td>
         <td>
-          <ul>
-            {% for cta in draft.cta_variants %}
-            <li>{{ cta }}</li>
-            {% endfor %}
-          </ul>
+          {% if draft.selected_cta %}
+            ✅ Есть выбор
+          {% else %}
+            ⏳ Не выбран
+          {% endif %}
         </td>
         <td>
-          <div class="actions">
-            <form action="/web/drafts/{{ draft.id }}/approve" method="post">
-              <button type="submit" class="ok">Одобрить</button>
-            </form>
-            <form action="/web/drafts/{{ draft.id }}/reject" method="post">
-              <button type="submit" class="danger">Отклонить</button>
-            </form>
-          </div>
+          <a href="/web/drafts/{{ draft.id }}">Открыть черновик</a>
         </td>
       </tr>
       {% endfor %}
