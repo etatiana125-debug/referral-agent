@@ -4,10 +4,10 @@ setlocal
 cd /d "%~dp0"
 
 echo ========================================
-echo Setup for Referral Content Agent
+echo Pinterest Referral Agent - Windows Setup
 echo ========================================
 
-echo [1/6] Checking Python...
+echo [1/5] Check Python in PATH...
 python --version >nul 2>nul
 if errorlevel 1 (
   echo ERROR: Python is not found in PATH.
@@ -16,7 +16,7 @@ if errorlevel 1 (
   exit /b 1
 )
 
-echo [2/6] Creating virtual environment (.venv)...
+echo [2/5] Create .venv if missing...
 if exist ".venv\Scripts\python.exe" (
   echo .venv already exists.
 ) else (
@@ -28,31 +28,23 @@ if exist ".venv\Scripts\python.exe" (
   )
 )
 
-echo [3/6] Activating virtual environment...
-call ".venv\Scripts\activate.bat"
+echo [3/5] Upgrade pip in .venv...
+".venv\Scripts\python.exe" -m pip install --upgrade pip
 if errorlevel 1 (
-  echo ERROR: Failed to activate .venv
+  echo ERROR: Failed to upgrade pip in .venv
   pause
   exit /b 1
 )
 
-echo [4/6] Upgrading pip...
-python -m pip install --upgrade pip
+echo [4/5] Install dependencies...
+".venv\Scripts\python.exe" -m pip install -r requirements.txt
 if errorlevel 1 (
-  echo ERROR: Failed to upgrade pip
+  echo ERROR: Failed to install dependencies.
   pause
   exit /b 1
 )
 
-echo [5/6] Installing dependencies...
-pip install -r requirements.txt
-if errorlevel 1 (
-  echo ERROR: Failed to install dependencies from requirements.txt
-  pause
-  exit /b 1
-)
-
-echo [6/6] Done.
-echo Next step: run run_api.bat
+echo [5/5] Setup done.
+echo Next: run run_api.bat
 pause
 exit /b 0
