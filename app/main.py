@@ -147,7 +147,7 @@ async def upload_images(
         file_path.write_bytes(await upload.read())
         collected_image_paths.append(file_path)
 
-    # 2) Если есть ZIP — извлекаем изображения из архива.
+    # 2) Если есть ZIP - извлекаем изображения из архива.
     if zip_file and zip_file.filename:
         zip_path = uploads_dir / zip_file.filename
         zip_path.write_bytes(await zip_file.read())

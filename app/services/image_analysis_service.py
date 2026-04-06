@@ -6,7 +6,7 @@ class ImageAnalysisService:
 
     Сейчас работает в безопасном fallback-режиме без vision-модели:
     - title строится из имени файла
-    - description и keywords — по шаблону
+    - description и keywords - по шаблону
 
     Позже можно заменить метод analyze_image на вызов реальной vision-модели.
     """
