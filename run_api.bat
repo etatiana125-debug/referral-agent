@@ -1,27 +1,34 @@
 @echo off
-chcp 65001 > nul
+setlocal
 
-set VENV_DIR=.venv
+cd /d "%~dp0"
 
 echo ========================================
-echo Запуск API
+echo Run Referral Content Agent API
 echo ========================================
 
-if not exist "%VENV_DIR%\Scripts\python.exe" (
-  echo [ОШИБКА] Виртуальное окружение не найдено.
-  echo Сначала запустите setup_windows.bat
+if not exist ".venv\Scripts\python.exe" (
+  echo ERROR: .venv is not found.
+  echo Run setup_windows.bat first.
   pause
   exit /b 1
 )
 
-call %VENV_DIR%\Scripts\activate.bat
+call ".venv\Scripts\activate.bat"
 if errorlevel 1 (
-  echo [ОШИБКА] Не удалось активировать виртуальное окружение.
-  echo Запустите setup_windows.bat повторно.
+  echo ERROR: Failed to activate .venv
   pause
   exit /b 1
 )
 
-echo Запускаю сервер...
-echo Откройте в браузере: http://127.0.0.1:8000
+echo Starting server...
+echo Open in browser: http://127.0.0.1:8000
 python -m uvicorn app.main:app --reload
+if errorlevel 1 (
+  echo.
+  echo ERROR: Server stopped with an error.
+  pause
+  exit /b 1
+)
+
+exit /b 0

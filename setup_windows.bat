@@ -1,51 +1,58 @@
 @echo off
-chcp 65001 > nul
+setlocal
 
-set VENV_DIR=.venv
+cd /d "%~dp0"
 
 echo ========================================
-echo Настройка проекта для Windows
+echo Setup for Referral Content Agent
 echo ========================================
 
-echo [1/4] Проверяю Python...
-python --version
+echo [1/6] Checking Python...
+python --version >nul 2>nul
 if errorlevel 1 (
-  echo [ОШИБКА] Python не найден.
-  echo Установите Python 3.11+ и включите опцию "Add Python to PATH".
+  echo ERROR: Python is not found in PATH.
+  echo Install Python 3.11+ and enable "Add Python to PATH".
   pause
   exit /b 1
 )
 
-echo [2/4] Создаю виртуальное окружение %VENV_DIR%...
-if exist "%VENV_DIR%\Scripts\python.exe" (
-  echo Виртуальное окружение уже существует.
+echo [2/6] Creating virtual environment (.venv)...
+if exist ".venv\Scripts\python.exe" (
+  echo .venv already exists.
 ) else (
-  python -m venv %VENV_DIR%
+  python -m venv .venv
   if errorlevel 1 (
-    echo [ОШИБКА] Не удалось создать виртуальное окружение.
+    echo ERROR: Failed to create .venv
     pause
     exit /b 1
   )
 )
 
-echo [3/4] Активирую виртуальное окружение...
-call %VENV_DIR%\Scripts\activate.bat
+echo [3/6] Activating virtual environment...
+call ".venv\Scripts\activate.bat"
 if errorlevel 1 (
-  echo [ОШИБКА] Не удалось активировать виртуальное окружение.
+  echo ERROR: Failed to activate .venv
   pause
   exit /b 1
 )
 
-echo [4/4] Устанавливаю зависимости...
+echo [4/6] Upgrading pip...
 python -m pip install --upgrade pip
+if errorlevel 1 (
+  echo ERROR: Failed to upgrade pip
+  pause
+  exit /b 1
+)
+
+echo [5/6] Installing dependencies...
 pip install -r requirements.txt
 if errorlevel 1 (
-  echo [ОШИБКА] Не удалось установить зависимости.
-  echo Проверьте интернет и настройки прокси, затем запустите setup_windows.bat снова.
+  echo ERROR: Failed to install dependencies from requirements.txt
   pause
   exit /b 1
 )
 
-echo.
-echo Готово! Теперь запустите run_api.bat
+echo [6/6] Done.
+echo Next step: run run_api.bat
 pause
+exit /b 0
