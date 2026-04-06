@@ -20,6 +20,7 @@ def test_build_content_options_count() -> None:
     assert len(ctas) == 2
     assert len(set(hooks)) == 3
     assert len(set(ctas)) == 2
+    assert "https://example.com/ref" in ctas[0]
 
 
 def test_platform_text_styles_are_different() -> None:
@@ -44,3 +45,22 @@ def test_platform_text_styles_are_different() -> None:
 
     assert tg_text != vk_text
     assert "1) Что важно" in vk_text
+
+
+def test_anti_repeat_for_recent_hook_and_cta() -> None:
+    hooks, ctas = build_content_options(
+        title="AI-контент",
+        description="Идея для быстрых визуалов",
+        utm_link="https://example.com/ref",
+    )
+
+    next_hooks, next_ctas = build_content_options(
+        title="AI-контент",
+        description="Идея для быстрых визуалов",
+        utm_link="https://example.com/ref",
+        recent_hook=hooks[0],
+        recent_cta=ctas[0],
+    )
+
+    assert next_hooks[0] != hooks[0]
+    assert next_ctas[0] != ctas[0]

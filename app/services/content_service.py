@@ -15,10 +15,16 @@ class ContentService:
     def create_draft_from_pin(self, payload: DraftCreateRequest) -> DraftResponse:
         """Создает и сохраняет новый черновик на основе данных пина."""
         utm_link = build_utm_link(payload.referral_url, source="pinterest", campaign=payload.campaign)
+        existing_drafts = self.storage_service.load_drafts()
+        recent_hook = existing_drafts[-1].hooks[0] if existing_drafts and existing_drafts[-1].hooks else None
+        recent_cta = existing_drafts[-1].cta_variants[0] if existing_drafts and existing_drafts[-1].cta_variants else None
+
         hooks, cta_variants = build_content_options(
             title=payload.pin_title,
             description=payload.pin_description,
             utm_link=utm_link,
+            recent_hook=recent_hook,
+            recent_cta=recent_cta,
         )
 
         telegram_text = build_telegram_text(

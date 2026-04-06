@@ -91,12 +91,14 @@
 ## 6) Где менять стиль текстов вручную
 
 Если хотите подправить тон и формулировки:
-- `prompts/shared_rules.txt` — общий стиль, структура текста, ограничения и мягкость CTA.
+- `prompts/hooks_library.txt` — библиотека начал (хуков) для вариативности первых абзацев.
+- `prompts/cta_library.txt` — библиотека мягких CTA для концовки поста.
+- `prompts/shared_rules.txt` — общие правила качества текста и структура.
 - `prompts/telegram_style.txt` — стиль Telegram (живой, тёплый, разговорный).
 - `prompts/vk_style.txt` — стиль VK (более структурный, удобный для ленты).
-- `prompts/author_voice.txt` — авторский тон: дружелюбный, умный, человеческий.
+- `prompts/author_voice.txt` — общий авторский тон.
 
-Эти файлы можно редактировать вручную в любом текстовом редакторе — Python-код трогать не нужно.
+Все эти файлы можно редактировать вручную в любом текстовом редакторе — Python-код трогать не нужно.
 
 ---
 
@@ -133,6 +135,8 @@ setup_windows.bat
 run_api.bat
 
 # Стиль генерации
+prompts/hooks_library.txt
+prompts/cta_library.txt
 prompts/shared_rules.txt
 prompts/telegram_style.txt
 prompts/vk_style.txt
